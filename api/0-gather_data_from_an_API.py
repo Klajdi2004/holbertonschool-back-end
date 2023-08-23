@@ -1,44 +1,35 @@
 #!/usr/bin/python3
-""" api """
+
+import json
 import requests
 import sys
 
+if __name__ == "__main__":
+    todo_api = requests.get("https://jsonplaceholder.typicode.com/todos")
+    user_api = requests.get("https://jsonplaceholder.typicode.com/users")
 
-def filter(data, key, val):
-    return [v for v in data if v[key] is val]
+    todos_json = todo_api.text
+    users_json = user_api.text
 
+    todos = json.loads(todos_json)
+    users = json.loads(users_json)
 
-def first(data):
-    if len(data) < 1:
-        return None
+    for select_user in users:
+        if int(select_user["id"]) == int(sys.argv[1]):
+            user = select_user
 
-    return data[0]
+    done_tasks = []
+    done_tasks_counter = 0
+    all_count = 0
 
+    for todo in todos:
+        if todo["userId"] == user["id"]:
+            if todo["completed"] is True:
+                done_tasks.append(todo["title"])
+                done_tasks_counter += 1
+            all_count += 1
 
-def must(value, error):
-    if value is None:
-        raise error
-
-    return value
-
-
-def main():
-    index = int(sys.argv[1])
-
-    users = requests.get('https://jsonplaceholder.typicode.com/users').json()
-    todos = requests.get('https://jsonplaceholder.typicode.com/todos').json()
-
-    user_data = must(first(filter(users, 'id', index)),
-                     ValueError("user not found"))
-    user_todos = filter(todos, 'userId', user_data['id'])
-    user_todos_done = filter(user_todos, 'completed', True)
-    user_todos_left = filter(user_todos, 'completed', False)
-
-    print('Employee %s is done with tasks(%s/%s):' %
-          (user_data['name'], len(user_todos_done), len(user_todos)))
-    for v in user_todos_done:
-        print('\t %s' % (v['title']))
-
-
-if __name__ == '__main__':
-    main()
+    print("Employee {} is done with tasks({}/{}):".format
+          (user["name"], done_tasks_counter, all_count))
+    for task in done_tasks:
+        print("\t {}".format(task))
