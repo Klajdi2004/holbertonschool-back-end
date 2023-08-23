@@ -1,24 +1,44 @@
 #!/usr/bin/python3
+""" api """
 import requests
-from sys import argv
+import sys
 
 
-if __name__ == "__main__":
-    API_URL = "https://jsonplaceholder.typicode.com/"
+def filter(data, key, val):
+    return [v for v in data if v[key] is val]
 
-    user_id = argv[1]
-    response = requests.get("{}users/{}/todos".format(API_URL, user_id),
-                            params={"_expand": "user"})
 
-    if response.status_code == 200:
-        data = response.json()
-        name = data[0]["user"]["name"]
-        task_done = [task for task in data if task["completed"]]
+def first(data):
+    if len(data) < 1:
+        return None
 
-        print("Employee {} is done with tasks({}/{}):".format(
-            name, len(task_done), len(data)))
-        for task in task_done:
-            print("\t {}".format(task["title"]))
+    return data[0]
 
-    else:
-        print("Error: {}".format(response.status_code))
+
+def must(value, error):
+    if value is None:
+        raise error
+
+    return value
+
+
+def main():
+    index = int(sys.argv[1])
+
+    users = requests.get('https://jsonplaceholder.typicode.com/users').json()
+    todos = requests.get('https://jsonplaceholder.typicode.com/todos').json()
+
+    user_data = must(first(filter(users, 'id', index)),
+                     ValueError("user not found"))
+    user_todos = filter(todos, 'userId', user_data['id'])
+    user_todos_done = filter(user_todos, 'completed', True)
+    user_todos_left = filter(user_todos, 'completed', False)
+
+    print('Employee %s is done with tasks(%s/%s):' %
+          (user_data['name'], len(user_todos_done), len(user_todos)))
+    for v in user_todos_done:
+        print('\t %s' % (v['title']))
+
+
+if __name__ == '__main__':
+    main()
