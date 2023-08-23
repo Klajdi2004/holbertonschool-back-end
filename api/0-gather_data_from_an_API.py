@@ -1,30 +1,40 @@
 #!/usr/bin/python3
-"""
-Module for task0 about request and API
-"""
+"""Script that, using this REST API, for a given employee ID,
+returns information about his/her TODO list progress"""
 
 import requests
-from sys import argv
-
-url_base = 'https://jsonplaceholder.typicode.com/users/'
+import sys
 
 
-def get_data():
-    """ This function get data of the placeholders API """
-    name = requests.get(url_base + argv[1]).json()
-    todos = requests.get(url_base + argv[1] + '/todos/').json()
-    count = 0
-    title = ""
+if __name__ == "__main__":
 
-    for item in todos:
-        if item['completed'] is True:
-            title += "\t {}\n".format(item['title'])
-            count += 1
+    employee_id = int(sys.argv[1])
 
-    print("Employee {} is done with tasks({}/20):\n{}".format(name['name'],
-                                                              count, title),
-          end='')
+    todos_response = requests.get(
+        "https://jsonplaceholder.typicode.com/todos")
+    employees_response = requests.get(
+        "https://jsonplaceholder.typicode.com/users")
 
+    todos = todos_response.json()
+    employees = employees_response.json()
 
-if __name__ == '__main__':
-    get_data()
+    employee_name = None
+    employee_completed_tasks = []
+
+    for employee in employees:
+        if employee["id"] == employee_id:
+            employee_name = employee["name"]
+            break
+
+    for task in todos:
+        if task["userId"] == employee_id:
+            if task["completed"]:
+                employee_completed_tasks.append(task["title"])
+
+    total_tasks = sum(1 for task in todos if task["userId"] == employee_id)
+    num_completed_tasks = len(employee_completed_tasks)
+
+    print(f"Employee {employee_name} is done with tasks({
+        num_completed_tasks}/{total_tasks}):")
+    for title in employee_completed_tasks:
+        print(f"\t {title}")
