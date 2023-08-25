@@ -6,7 +6,7 @@ import sys
 
 
 if __name__ == "__main__":
-    """Get api bob"""
+    """Get API"""
     todos_api = requests.get(
         'https://jsonplaceholder.typicode.com/todos/')
     user_api = requests.get(
